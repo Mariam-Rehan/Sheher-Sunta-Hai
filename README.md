@@ -5,7 +5,7 @@
 </div>
 
 <p align="center">
-  <img src="screenshots/sheher-sunta-hai-demo.gif" alt="Sheher Sunta Hai Demo" width="400"/>
+  <img src="shehersuntahai.gif" alt="Sheher Sunta Hai Banner" width="400"/>
 </p>
 
 **Sheher Sunta Hai** is a public dashboard where people in Pakistan can **report** civic issues and **see them visualized** on a map. Whether it's garbage dumps, broken roads, or water leaks — this tool gives you a way to **say something**, and have your city *listen*.
