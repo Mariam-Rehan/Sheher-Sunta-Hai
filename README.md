@@ -71,7 +71,15 @@ A free, open-source platform where anyone can:
 
 ## 🪄 Screenshots
 
-> Coming soon! (or drop your own if you try it 👀)
+<p align="center">
+  <img src="screenshots/shehersuntahai-exploreview.png" alt="Sheher Sunta Hai explore" width="400"/>
+</p>
+<p align="center">
+  <img src="screenshots/shehersuntahai-mapview.png" alt="Sheher Sunta Hai explore" width="400"/>
+</p>
+<p align="center">
+  <img src="screenshots/shehersuntahai-heatmap.png" alt="Sheher Sunta Hai explore" width="400"/>
+</p>
 
 ---
 
