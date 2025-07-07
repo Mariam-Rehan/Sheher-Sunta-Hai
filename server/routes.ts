@@ -8,15 +8,18 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import fetch from "node-fetch"; // If not already imported
+import AWS from 'aws-sdk';
 
-// Configure multer for image uploads
-const uploadDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Configure AWS
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,      // set in your Render env vars
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY, // set in your Render env vars
+  region: 'ap-southeast-2', // or your chosen region
+});
+
 
 const upload = multer({
-  dest: uploadDir,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -116,8 +119,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Handle image upload
       if (req.file) {
-        const imageUrl = `/uploads/${req.file.filename}`;
-        complaintData.imageUrl = imageUrl;
+        // Upload to S3
+        const s3Params = {
+          Bucket: 'sheher-sunta-hai-uploads', // your bucket name
+          Key: Date.now() + '-' + req.file.originalname, // unique file name
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype,
+          ACL: 'public-read', // so the image is viewable by anyone
+        };
+
+        const s3Result = await s3.upload(s3Params).promise();
+        complaintData.imageUrl = s3Result.Location; // this is the public S3 URL
       }
 
       const complaint = await storage.createComplaint(complaintData);
@@ -242,8 +254,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Serve uploaded images
-  app.use('/uploads', express.static(uploadDir));
-
   const httpServer = createServer(app);
   return httpServer;
 }
