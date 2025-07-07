@@ -72,13 +72,13 @@ A free, open-source platform where anyone can:
 ## 🪄 Screenshots
 
 <p align="center">
-  <img src="screenshots/shehersuntahai-exploreview.png" alt="Sheher Sunta Hai explore" width="400"/>
+  <img src="screenshots/shehersuntahai-mapview.png" alt="Sheher Sunta Hai map"/>
 </p>
 <p align="center">
-  <img src="screenshots/shehersuntahai-mapview.png" alt="Sheher Sunta Hai explore" width="400"/>
+  <img src="screenshots/shehersuntahai-exploreview.png" alt="Sheher Sunta Hai explore"/>
 </p>
 <p align="center">
-  <img src="screenshots/shehersuntahai-heatmap.png" alt="Sheher Sunta Hai explore" width="400"/>
+  <img src="screenshots/shehersuntahai-heatmap.png" alt="Sheher Sunta Hai heatmap"/>
 </p>
 
 ---
