@@ -92,7 +92,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=pk&accept-language=en&q=${encodeURIComponent(query)}`;
+      const url = `https://us1.locationiq.com/v1/search.php?key=${process.env.LOCATIONIQ_ACCESS_TOKEN}&q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=pk&accept-language=en`;
       const response = await fetch(url, {
         headers: {
           "User-Agent": "SheherSuntaHai/1.0 (contact@example.com)",
