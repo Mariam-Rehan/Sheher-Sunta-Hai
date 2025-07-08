@@ -197,7 +197,9 @@ export function ComplaintForm({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to submit complaint");
+        const errorText = await response.text();
+        console.error("Server error response:", errorText);
+        throw new Error(`Server error: ${response.status} - ${errorText}`);
       }
 
       toast({
