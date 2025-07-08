@@ -8,16 +8,18 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import fetch from "node-fetch"; // If not already imported
-import AWS from 'aws-sdk';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
-// Configure AWS
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,      // set in your Render env vars
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY, // set in your Render env vars
-  region: 'ap-southeast-2', // or your chosen region
+// Configure AWS S3
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION || 'us-east-1',
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
 });
 
-
+// Configure multer for S3 uploads (store in memory instead of disk)
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
@@ -106,37 +108,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Complaint routes
-  
+
   app.post("/api/complaints", upload.single('image'), async (req, res) => {
     try {
       console.log("🔥 Received complaint body:", req.body);
       console.log("🖼️ Uploaded file:", req.file);
+
+      // Log the parsed data
       const complaintData = insertComplaintSchema.parse({
         ...req.body,
         latitude: parseFloat(req.body.latitude),
         longitude: parseFloat(req.body.longitude),
       });
 
-      // Handle image upload
+      console.log("✅ Parsed complaint data:", complaintData);
+
+      // Handle image upload to S3
       if (req.file) {
-        // Upload to S3
+        console.log("🖼️ Starting S3 upload...");
+        console.log("📁 File info:", {
+          originalname: req.file.originalname,
+          mimetype: req.file.mimetype,
+          size: req.file.buffer.length
+        });
+
+        const bucketName = process.env.S3_BUCKET_NAME || 'sheher-sunta-hai-uploads';
+        const key = Date.now() + '-' + req.file.originalname;
+
         const s3Params = {
-          Bucket: 'sheher-sunta-hai-uploads', // your bucket name
-          Key: Date.now() + '-' + req.file.originalname, // unique file name
+          Bucket: bucketName,
+          Key: key,
           Body: req.file.buffer,
           ContentType: req.file.mimetype,
-          ACL: 'public-read', // so the image is viewable by anyone
         };
 
-        const s3Result = await s3.upload(s3Params).promise();
-        complaintData.imageUrl = s3Result.Location; // this is the public S3 URL
+        console.log("🔧 S3 params:", {
+          Bucket: s3Params.Bucket,
+          Key: s3Params.Key,
+          ContentType: s3Params.ContentType
+        });
+
+        try {
+          const command = new PutObjectCommand(s3Params);
+          await s3Client.send(command);
+          const imageUrl = `https://${bucketName}.s3.${process.env.AWS_REGION || 'ap-southeast-2'}.amazonaws.com/${key}`;
+          console.log("✅ S3 upload successful:", imageUrl);
+          complaintData.imageUrl = imageUrl;
+        } catch (error) {
+          console.error("❌ S3 upload failed:", error);
+          throw error;
+        }
       }
 
       const complaint = await storage.createComplaint(complaintData);
+      console.log("✅ Complaint created successfully:", complaint.id);
       res.json(complaint);
     } catch (error) {
       console.error('Complaint creation error:', error);
-      res.status(400).json({ error: "Invalid complaint data" });
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      res.status(400).json({ error: "Invalid complaint data", details: error.message });
     }
   });
 
@@ -253,7 +287,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve uploaded images
   const httpServer = createServer(app);
   return httpServer;
 }
